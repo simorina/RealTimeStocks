@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <title>Stock Data Publisher</title>
+    <script>
+        // Function to handle the form submission response
+        function handlePublishResponse(response) {
+            
+            alert(response.message); // Display error message in a pop-up
+            
+        }
+    
+        // Function to send the form data asynchronously
+        function submitForm(event) {
+            event.preventDefault();  // Prevent form from submitting the traditional way
+    
+            const stockSymbol = document.getElementById('stock_symbol').value;
+            const formData = new FormData();
+            formData.append('stock_symbol', stockSymbol);
+    
+            fetch('/publish', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(handlePublishResponse)
+            .catch(error => {
+                alert('An error occurred: ' + error.message); // Display error if network issue
+            });
+        }
+    </script>
+    
+</head>
+<body>
+    <h1>Publish Stock Data to Pulsar</h1>
+    
+    <!-- Form for selecting stock symbol -->
+    <form id="publishForm" onsubmit="submitForm(event)">
+        <label for="stock_symbol">Select a Stock Symbol:</label>
+        <select name="stock_symbol" id="stock_symbol">
+            <option value="AAPL">Apple (AAPL)</option>
+            <option value="GOOG">Google (GOOG)</option>
+            <option value="AMZN">Amazon (AMZN)</option>
+            <option value="TSLA">Tesla (TSLA)</option>
+            <option value="MSFT">Microsoft (MSFT)</option>
+        </select>
+        <button type="submit">Start Publishing</button>
+    </form>
+
+    <h2>Instructions:</h2>
+    <p>Choose a stock symbol from the dropdown above to start publishing stock data to the Pulsar topic.</p>
+
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe to Stock Topic</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/subscriber.css') }}">
+</head>
+<body>
+    <h1>Subscribe to Stock Topic</h1>
+
+    <!-- Form for selecting topic to subscribe to -->
+    <form action="/subscribe" method="POST">
+        <label for="topic_name">Enter Topic Name (e.g., stock-AAPL, stock-TSLA):</label>
+        <input type="text" id="topic_name" name="topic_name" required>
+        <button type="submit">Subscribe</button>
+    </form>
+
+    <h2>Instructions:</h2>
+    <p>Enter the topic name for the stock you want to subscribe to (e.g., stock-AAPL, stock-TSLA), and click 'Subscribe' to start receiving real-time stock data.</p>
+
+    <!-- New container for individual stock data sections -->
+    <div id="stocks">
+        <!-- Stock data for each symbol will be dynamically added here -->
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // Emit subscribe event when the button is clicked
+        document.querySelector('button').addEventListener('click', () => {
+            const topicName = document.querySelector('input').value;
+            socket.emit('subscribe', { topic: topicName });
+        });
+
+        // Function to update or create stock data section
+        function updateStockSection(symbol, data) {
+            const stocksDiv = document.querySelector('#stocks');
+
+            // Check if a div for this symbol already exists
+            let stockDiv = document.querySelector(`#stock-${symbol}`);
+            
+            // If it doesn't exist, create a new div for this symbol
+            if (!stockDiv) {
+                stockDiv = document.createElement('div');
+                stockDiv.id = `stock-${symbol}`;
+                stockDiv.classList.add('stock-section');
+                stocksDiv.appendChild(stockDiv);
+            }
+
+            // Update the content for this stock symbol
+            stockDiv.innerHTML = `
+                <h3>${symbol} Stock Data</h3>
+                <p>Price: ${data.price}</p>
+                <p>Timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
+            `;
+        }
+
+        // Listen for 'stock_data' event from server
+        socket.on('stock_data', (data) => {
+            updateStockSection(data.symbol, data);
+        });
+
+        // Listen for 'message' event for each topic
+        socket.on('message', (data) => {
+            const messagesDiv = document.querySelector('#messages');
+            
+            // Create a new message entry
+            const messageEntry = document.createElement('div');
+            messageEntry.classList.add('message-entry');
+            messageEntry.innerHTML = `
+                <h4>Topic: ${data.topic}</h4>
+                <p>${data.message}</p>
+                <p><small>${new Date(data.timestamp).toLocaleString()}</small></p>
+            `;
+
+            // Append message to messages div
+            messagesDiv.appendChild(messageEntry);
+        });
+    </script>
+</body>
+</html>
